@@ -1,7 +1,13 @@
+#!/usr/bin/env python3
+
+
 import psycopg2
+DBNAME = 'news'
+
+# Connects to the database and executes the queries in sql
 
 
-def Data(query):
+def data(query):
     db = psycopg2.connect(database=DBNAME)
     c = db.cursor()
     c.execute(query)
@@ -9,31 +15,59 @@ def Data(query):
     db.close()
     return(results)
 
-# 1. What are the three most popular articles of all time?
+# Creates the sql query requirements and runs the response for Q1
 
 
 def PopularArticles():
-    query = '''select articles.title, count (*) as views from articles inner
-    join log on log.path like concat (%, articles.slug, '%') where log.status
-    like '%200' group by articles.title, log.path order by views desc limit
-    3;'''
+    question_1 = ("What are the most popular three articles of all time?")
+    query_1 = '''select articles.title, count(*) as views from articles
+    inner join log on log.path = concat('/article/', articles.slug)
+    group by log.path, articles.title order by views desc limit 3;'''
 
-    # 2. Who are the most popular article authors of all time?
+    run_report = data(query_1)
+    print("    " + question_1)
+    for i in range(len(run_report)):
+        print(' {}: Article: {}, Total Views: {}'
+              .format(i + 1, run_report[i][0], run_report[i][1]))
 
 
+# Creates the sql query requirements and runs the response for Q2
 def PopularAuthors():
-    query = '''select authors.name, count (*) as views from articles inner
-    join authors on articles.author = authors.id inner join log on log.path
-    = concat ('/article/', articles.slug) group by authors.name order by
-    views.desc'''
+    question_2 = "Who are the most popular article authors of all time?"
+    query_2 = '''select authors.name, count(*) as views from articles
+    inner join authors on authors.id=articles.author inner join
+    log on log.path = concat('/article/', articles.slug)
+    group by authors.name order by views desc;'''
 
-    # 3. On whih days did more than 1% of requests lead to errors?
+    run_report = data(query_2)
+    print("    " + question_2)
+    for i in range(len(run_report)):
+        print(' {}: Author: {}, Total Views: {}'
+              .format(i + 1, run_report[i][0], run_report[i][1]))
 
 
+# Creates the sql query requirements and runs the response for Q3
 def RequestErrors():
-    query = '''select day, perc from ('select day, round (sum(requests)/
-    (select count (*) from log where substring(cast(log.time as text), 0, 11
-    = day) * 100), 2) as perc from (select substring(cast(log.time as text)
-    0, 11) as day, count (*) as requests from log where status like '%404'
-    group by day) as log_percentage group by day order by perc desc) as
-    final_query where perc >= 1%)'''
+    question_3 = "On which days did more than 1% of requests lead to errors?"
+    query_3 = '''select * from (select date, CAST((CAST(errorRequest AS float)
+    * 100.0 ) / CAST(totalRequest AS float) as DECIMAL(16,2)) as
+    errorpercentage from (select T.date, totalRequest, errorRequest from (
+    select date(time) as date, count(*) as errorRequest from log where
+    log.status like '%404%' group by date) as T inner join(select date(time) as
+    date, count(*) as totalRequest from log group by date) as E on
+    T.date=E.date) as logtable) as errorRequest where errorpercentage >1.0;'''
+
+    run_report = data(query_3)
+    print("    " + question_3)
+    for i in range(len(run_report)):
+        print(' {}: Date: {}, Percent Error: {}'
+              .format(i + 1, run_report[i][0], run_report[i][1]))
+
+
+# Executes the python programming
+if __name__ == "__main__":
+    PopularArticles()
+    print('\n')
+    PopularAuthors()
+    print('\n')
+    RequestErrors()
