@@ -8,12 +8,14 @@ questions asked.
 
 <h2>Prerequisites</h2>
 
-Python
-Vagrant
-sql
+<ul>
+  <li>Python</li>
+  <li>Vagrant</li>
+  <li>sql</li>
+</ul>
 
 <h2>Setup</h2>
 
-Fork repository and save news.py into your vagrant directory. Using command line
+Download news.py and save into your vagrant directory. Using command line
 make sure you are in the vagrant directory and launch the your virtual machine.
 Once launched execute news.py in python3.  
